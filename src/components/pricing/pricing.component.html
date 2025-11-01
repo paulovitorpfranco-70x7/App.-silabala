@@ -1,0 +1,385 @@
+<div class="space-y-8">
+  <header>
+    <h2 class="text-3xl font-bold text-[var(--text-color)]">Precificação Inteligente</h2>
+    <p class="text-[var(--secondary-color)] mt-1">Calcule o preço de venda ideal para seus produtos.</p>
+  </header>
+  
+  @if (pageMessage()) {
+    <div class="bg-[var(--success-bg)] border-l-4 border-green-500 text-[var(--success-text)] p-4 rounded-lg animate-fade-in" role="alert">
+      <p class="font-bold">✨ {{ pageMessage() }}</p>
+    </div>
+  }
+
+  <div class="p-6 rounded-2xl transition-all bg-[var(--card-color)] border border-[var(--input-border-color)] shadow-[0_2px_5px_var(--shadow-color)]">
+    <!-- Tabs -->
+    <div class="border-b border-[var(--input-border-color)]">
+      <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+        <button (click)="setTab('products')" [class]="'px-3 py-3 font-semibold text-sm rounded-t-lg ' + (activeTab() === 'products' ? 'border-b-2 border-pink-500 text-pink-600' : 'text-[var(--secondary-color)] hover:text-gray-700')">
+          Calcular Produto
+        </button>
+        <button (click)="setTab('materials')" [class]="'px-3 py-3 font-semibold text-sm rounded-t-lg ' + (activeTab() === 'materials' ? 'border-b-2 border-pink-500 text-pink-600' : 'text-[var(--secondary-color)] hover:text-gray-700')">
+          Materiais
+        </button>
+        <button (click)="setTab('costs')" [class]="'px-3 py-3 font-semibold text-sm rounded-t-lg ' + (activeTab() === 'costs' ? 'border-b-2 border-pink-500 text-pink-600' : 'text-[var(--secondary-color)] hover:text-gray-700')">
+          Custos Fixos
+        </button>
+      </nav>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="pt-6">
+      @switch (activeTab()) {
+        @case ('products') {
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Form -->
+            <div class="space-y-4">
+              <h3 class="text-xl font-bold text-[var(--text-color)]">1. Detalhes do Produto</h3>
+              <div>
+                <label class="block text-sm font-medium text-[var(--secondary-color)]">Nome do Produto</label>
+                <input type="text" [ngModel]="productName()" (ngModelChange)="productName.set($event)" class="mt-1 block w-full sm:text-sm">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-[var(--secondary-color)]">Tempo Gasto (minutos)</label>
+                <input type="number" [ngModel]="timeMinutes()" (ngModelChange)="timeMinutes.set($event)" class="mt-1 block w-full sm:text-sm">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-[var(--secondary-color)]">Margem de Lucro (%)</label>
+                <input type="number" [ngModel]="profitMargin()" (ngModelChange)="profitMargin.set($event)" class="mt-1 block w-full sm:text-sm">
+              </div>
+              
+              <h3 class="text-xl font-bold text-[var(--text-color)] pt-4">2. Materiais Utilizados</h3>
+               <p class="text-sm text-[var(--secondary-color)]">Visualize o material antes de selecionar 💕</p>
+
+                <!-- Search Bar -->
+                <div class="relative my-4" title="Digite para filtrar seus materiais 💕">
+                  <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                     <svg class="w-5 h-5 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                    </svg>
+                  </span>
+                  <input type="text" 
+                         [ngModel]="materialSearchTerm()" (ngModelChange)="materialSearchTerm.set($event)"
+                         placeholder="Buscar material pelo nome..."
+                         class="w-full sm:text-sm shadow-sm transition-all duration-300">
+                  @if(materialSearchTerm()) {
+                    <button (click)="materialSearchTerm.set('')" class="absolute inset-y-0 right-0 flex items-center pr-3 text-pink-500 hover:text-pink-700">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                  }
+                </div>
+
+              <div class="space-y-2 max-h-60 overflow-y-auto pr-2">
+                @for(material of filteredMaterials(); track material.id) {
+                   <div class="flex items-center justify-between p-2 rounded-lg" [class]="isMaterialSelected(material.id) ? 'bg-[var(--card-bg-hover)]' : ''">
+                        <div class="flex items-center gap-3 flex-grow">
+                             <img [src]="material.imageUrl || 'https://via.placeholder.com/50x50/F8C6D8/D4AF37?text=🎀'" 
+                                 alt="{{ material.name }}" 
+                                 class="w-12 h-12 rounded-full object-cover border-2 border-pink-200 shadow-sm cursor-pointer hover:scale-110 transition-transform"
+                                 (click)="openMaterialModal(material)"
+                                 title="Toque para visualizar">
+                            <label class="flex items-center space-x-3 cursor-pointer">
+                                <div class="relative flex items-center justify-center w-4 h-4 shrink-0">
+                                    <input type="checkbox" [checked]="isMaterialSelected(material.id)" (change)="toggleMaterialSelection(material)"
+                                           class="peer appearance-none h-4 w-4 rounded border-2 border-pink-300 focus:ring-pink-500 focus:ring-offset-0 checked:bg-pink-500 checked:border-0 bg-[var(--input-bg)]">
+                                    <svg class="absolute w-3 h-3 text-white hidden peer-checked:block pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="font-semibold">{{ material.name }}</p>
+                                    <p class="text-sm text-[var(--secondary-color)]" [title]="material.widthCm ? 'Peça original: ' + material.widthCm + 'cm x ' + material.heightCm + 'cm' : ''">
+                                      (R$ {{ material.unitCost.toFixed(material.unit === 'cm2' ? 4 : 2) }} / {{ material.unit }})
+                                    </p>
+                                </div>
+                            </label>
+                        </div>
+                        @if (isMaterialSelected(material.id)) {
+                          <div class="flex items-center">
+                            <input type="number" value="1" (input)="updateMaterialQuantity(material.id, $event)" class="w-20 text-right text-sm p-1 rounded-md bg-[var(--card-bg-hover)] border border-pink-200 focus:ring-1 focus:ring-pink-400 ml-2">
+                            <span class="text-sm text-[var(--secondary-color)] ml-1">
+                              @if (material.unit === 'cm2') {cm²} @else {{{material.unit}}}
+                            </span>
+                          </div>
+                        }
+                   </div>
+                } @empty {
+                  <div class="text-center py-8 text-[var(--secondary-color)]">
+                    <div class="text-4xl">😅</div>
+                    <p class="mt-2 font-semibold">Nenhum material encontrado.</p>
+                     @if(materialSearchTerm()) {
+                       <p class="text-sm">Tente ajustar sua busca.</p>
+                     }
+                  </div>
+                }
+              </div>
+
+              <button (click)="calculatePrice()" class="w-full text-white font-bold py-3 px-4 transition-all duration-300 rounded-xl bg-[var(--accent-color)] shadow-[0_3px_6px_var(--shadow-color)] hover:opacity-80">
+                Calcular Preço Sugerido
+              </button>
+            </div>
+
+            <!-- Result -->
+            <div class="p-6 rounded-2xl flex flex-col items-center justify-center text-center bg-[var(--bg-color)] border border-[var(--input-border-color)] shadow-inner">
+              @if (suggestedPrice() !== null) {
+                <h3 class="text-xl font-bold text-[var(--text-color)]">Preço de Venda Ideal</h3>
+                <p class="text-5xl font-bold text-pink-600 my-4">R$ {{ suggestedPrice()?.toFixed(2) }}</p>
+                <div class="text-sm text-[var(--secondary-color)]">
+                  <p>Custo da sua hora: R$ {{ hourlyRate().toFixed(2) }}</p>
+                  <p>Baseado nos seus custos, materiais e lucro desejado.</p>
+                </div>
+                <button (click)="saveProduct()" class="mt-6 text-white font-bold py-3 px-6 transition-all duration-300 rounded-xl bg-[var(--accent-color)] shadow-[0_3px_6px_var(--shadow-color)] hover:opacity-80">
+                  Salvar como Produto Pronto
+                </button>
+              } @else {
+                  <div class="text-center py-8 text-[var(--secondary-color)]">
+                    <div class="text-5xl">💖</div>
+                    <p class="mt-4 font-semibold">Preencha os dados ao lado</p>
+                    <p>para ver o preço sugerido aqui!</p>
+                  </div>
+              }
+            </div>
+          </div>
+        }
+        @case ('materials') {
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+             <div>
+                 <h3 class="text-xl font-bold text-[var(--text-color)] mb-4">Materiais Cadastrados</h3>
+                 <div class="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
+                    @for (item of dataService.materials(); track item.id) {
+                        <div class="bg-[var(--card-bg-hover)] p-3 rounded-lg flex justify-between items-center transition-all hover:shadow-md">
+                            <div class="flex items-center gap-4">
+                                <img [src]="item.imageUrl || 'https://via.placeholder.com/100'" alt="{{item.name}}" class="w-12 h-12 rounded-full object-cover border-2 border-pink-200">
+                                <div>
+                                    <p class="font-semibold text-[var(--text-color)]">{{item.name}}</p>
+                                    <p class="text-sm text-[var(--secondary-color)]" [title]="item.widthCm ? 'Peça original: ' + item.widthCm + 'cm x ' + item.heightCm + 'cm' : ''">
+                                      R$ {{item.unitCost.toFixed(item.unit === 'cm2' ? 4 : 2)}} / {{item.unit}}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-semibold text-[var(--text-color)]">Estoque</p>
+                                <p class="text-sm text-[var(--secondary-color)]">{{item.stock}}</p>
+                            </div>
+                        </div>
+                    } @empty {
+                        <div class="text-center py-12 text-[var(--secondary-color)]">
+                          <div class="text-4xl">🎀</div>
+                          <p class="mt-2">Nenhum material cadastrado.</p>
+                        </div>
+                    }
+                  </div>
+             </div>
+             <div class="p-6 rounded-2xl transition-all bg-[var(--bg-color)] border border-[var(--input-border-color)] shadow-[0_2px_5px_var(--shadow-color)]">
+                 <h3 class="text-xl font-bold text-[var(--text-color)] mb-4">Adicionar Novo Material</h3>
+                 <form (ngSubmit)="addMaterial()" class="space-y-4">
+                     <div class="flex flex-col items-center space-y-3">
+                        @if (newMaterialImage()) {
+                            <img [src]="newMaterialImage()" alt="Preview" class="w-24 h-24 rounded-full object-cover border-4 border-pink-300 shadow-sm">
+                        } @else {
+                            <div class="w-24 h-24 rounded-full bg-pink-100 flex items-center justify-center border-2 border-dashed border-pink-300">
+                                <span class="text-4xl text-pink-400">🎀</span>
+                            </div>
+                        }
+                        <div class="flex items-center gap-3">
+                            <button type="button" (click)="galleryInput.click()" class="cursor-pointer bg-[var(--card-color)] text-[var(--secondary-color)] border border-[var(--input-border-color)] hover:bg-[var(--card-bg-hover)] font-semibold px-4 py-2 rounded-lg text-sm shadow-sm transition-colors flex items-center gap-2">
+                                <span>🖼️ Galeria</span>
+                            </button>
+                            <button type="button" (click)="cameraInput.click()" class="cursor-pointer bg-[var(--card-color)] text-[var(--secondary-color)] border border-[var(--input-border-color)] hover:bg-[var(--card-bg-hover)] font-semibold px-4 py-2 rounded-lg text-sm shadow-sm transition-colors flex items-center gap-2">
+                                <span>📷 Câmera</span>
+                            </button>
+                        </div>
+                        <!-- Hidden file inputs -->
+                        <input #galleryInput type="file" (change)="onFileSelected($event)" accept="image/*" class="hidden">
+                        <input #cameraInput type="file" (change)="onFileSelected($event)" accept="image/*" capture="environment" class="hidden">
+                    </div>
+
+                    <input type="text" [(ngModel)]="newMaterialName" name="name" placeholder="Nome do material" class="w-full">
+                    <input type="number" [(ngModel)]="newMaterialCost" name="cost" [placeholder]="costPlaceholder()" class="w-full">
+                    
+                    <select [(ngModel)]="newMaterialUnit" name="unit" title="O app calcula automaticamente o custo proporcional à área usada." class="w-full">
+                        <option value="un">Unidade (un)</option>
+                        <option value="m">Metro (m)</option>
+                        <option value="cm">Centímetro (cm)</option>
+                        <option value="pct">Pacote (pct)</option>
+                        <option value="g">Grama (g)</option>
+                        <option value="ml">Mililitro (ml)</option>
+                        <option value="m2">Área (m²/cm²)</option>
+                    </select>
+                    
+                    @if (newMaterialUnit === 'm2' || newMaterialUnit === 'cm2') {
+                      <div class="space-y-3 p-4 bg-purple-500/10 border border-purple-200/50 rounded-lg animate-fade-in">
+                        <p class="text-sm text-purple-800 dark:text-purple-200 font-semibold text-center" title="Informe o tamanho total da folha ou tecido que você comprou 💕">
+                           Dimensões do material comprado
+                        </p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label for="width" class="block text-xs font-medium text-[var(--secondary-color)]">📏 Largura (cm)</label>
+                                <input type="number" id="width" [ngModel]="newMaterialWidth()" (ngModelChange)="newMaterialWidth.set($event)" name="width" placeholder="ex: 24"
+                                       class="w-full mt-1 text-sm">
+                            </div>
+                            <div>
+                                <label for="height" class="block text-xs font-medium text-[var(--secondary-color)]">📐 Altura (cm)</label>
+                                <input type="number" id="height" [ngModel]="newMaterialHeight()" (ngModelChange)="newMaterialHeight.set($event)" name="height" placeholder="ex: 40"
+                                       class="w-full mt-1 text-sm">
+                            </div>
+                        </div>
+                        <div>
+                            <label for="used_area" class="block text-xs font-medium text-[var(--secondary-color)]">🧵 Área usada por peça (cm²)</label>
+                            <input type="number" id="used_area" [ngModel]="newMaterialUsedArea()" (ngModelChange)="newMaterialUsedArea.set($event)" name="used_area" placeholder="ex: 95"
+                                   class="w-full mt-1 text-sm">
+                        </div>
+
+                        @if (estimatedPieceCost() > 0) {
+                          <div class="mt-2 p-3 bg-white/70 dark:bg-black/20 rounded-lg text-center border border-pink-200 shadow-inner">
+                            <p class="text-sm font-bold text-pink-700 dark:text-pink-300">💡 Custo estimado para esta peça:</p>
+                            <p class="text-2xl font-bold text-[#EB3C7E] dark:text-pink-300">R$ {{ estimatedPieceCost().toFixed(2) }}</p>
+                            <div class="text-xs text-[var(--secondary-color)] mt-1 space-y-0.5">
+                              <p>🧵 Área usada: {{newMaterialUsedArea()}} cm²</p>
+                              <p>📏 Área total: {{totalAreaDisplay()}} cm²</p>
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    }
+
+                    <input type="number" [(ngModel)]="newMaterialStock" name="stock" placeholder="Quantidade em estoque" class="w-full">
+                    <button type="submit" class="w-full text-white p-3 font-semibold transition-colors shadow-md rounded-xl bg-[var(--accent-color)] hover:opacity-80">Adicionar Material</button>
+                 </form>
+             </div>
+          </div>
+        }
+        @case ('costs') {
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+             <div>
+                 <h3 class="text-xl font-bold text-[var(--text-color)] mb-4">Custos Fixos Mensais</h3>
+                 
+                 @if (lastDeletedCost(); as deleted) {
+                  <div class="bg-[var(--warning-bg)] border-l-4 border-yellow-500 text-[var(--warning-text)] p-3 rounded-lg flex justify-between items-center mb-4 text-sm animate-fade-in">
+                    <p>"{{ deleted.cost.name }}" foi excluído.</p>
+                    <button (click)="undoDelete()" class="font-bold hover:underline px-3 py-1">Desfazer</button>
+                  </div>
+                 }
+
+                 <ul class="space-y-2">
+                    @for (item of dataService.fixedCosts(); track item.id) {
+                        <li class="bg-[var(--card-bg-hover)] p-3 rounded-lg flex justify-between items-center transition-all hover:shadow-sm">
+                            <div>
+                                <p class="text-[var(--text-color)]">{{item.name}}</p>
+                                <p class="font-semibold text-[var(--secondary-color)] text-sm">R$ {{item.monthlyValue.toFixed(2)}}</p>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <button (click)="openEditModal(item)" title="Editar Custo" class="p-2 rounded-full hover:bg-purple-100 text-purple-500 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+                                        <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                                <button (click)="openDeleteConfirm(item)" title="Excluir Custo" class="p-2 rounded-full hover:bg-pink-100 text-pink-500 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </li>
+                    } @empty {
+                       <div class="text-center py-12 text-[var(--secondary-color)]">
+                          <div class="text-4xl">💸</div>
+                          <p class="mt-2">Nenhum custo fixo cadastrado.</p>
+                       </div>
+                    }
+                 </ul>
+             </div>
+             <div class="p-6 rounded-2xl transition-all bg-[var(--bg-color)] border border-[var(--input-border-color)] shadow-[0_2px_5px_var(--shadow-color)]">
+                 <h3 class="text-xl font-bold text-[var(--text-color)] mb-4">Adicionar Novo Custo</h3>
+                 <form (ngSubmit)="addFixedCost()" class="space-y-4">
+                    <input type="text" [(ngModel)]="newCostName" name="costName" placeholder="Nome do custo (ex: Aluguel)" class="w-full">
+                    <input type="number" [(ngModel)]="newCostMonthlyValue" name="costValue" placeholder="Valor mensal" class="w-full">
+                    <button type="submit" class="w-full text-white p-3 font-semibold transition-colors shadow-md rounded-xl bg-[var(--accent-color)] hover:opacity-80">Adicionar Custo</button>
+                 </form>
+             </div>
+          </div>
+        }
+      }
+    </div>
+  </div>
+</div>
+
+<!-- Image Viewer Modal -->
+@if (viewingMaterial(); as material) {
+  <div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 animate-fade-in" (click)="closeMaterialModal()">
+    <div class="bg-[var(--card-color)] rounded-2xl shadow-2xl p-6 w-full max-w-sm transform transition-transform duration-300 scale-100 animate-scale-in" 
+         style="box-shadow: 0 0 20px rgba(248, 198, 216, 0.7); border: 2px solid #D4AF37;"
+         (click)="$event.stopPropagation()">
+      <img [src]="material.imageUrl || 'https://via.placeholder.com/250x250/F8C6D8/D4AF37?text=🎀'" 
+           alt="{{ material.name }}" 
+           class="w-full h-64 object-cover rounded-lg mb-4">
+      
+      <h3 class="text-xl font-bold text-center text-[var(--text-color)]">{{ material.name }}</h3>
+      <p class="text-center text-[var(--secondary-color)] mb-6">R$ {{ material.unitCost.toFixed(material.unit === 'cm2' ? 4 : 2) }} / {{ material.unit }}</p>
+
+      <button (click)="closeMaterialModal()" 
+              class="w-full bg-[#C8B7E8] text-white font-bold py-3 px-6 rounded-lg hover:bg-purple-400 transition-colors duration-300 shadow-lg">
+        Fechar 💖
+      </button>
+    </div>
+  </div>
+}
+
+<!-- Edit Cost Modal -->
+@if (editingCost(); as cost) {
+  <div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 animate-fade-in" (click)="closeEditModal()">
+    <div class="bg-[var(--bg-color)] rounded-2xl shadow-2xl p-6 w-full max-w-md transform transition-transform duration-300 scale-100 animate-scale-in" (click)="$event.stopPropagation()">
+      <h3 class="text-xl font-bold text-[var(--text-color)] mb-4">Editar Custo Fixo</h3>
+      <form (ngSubmit)="saveEditedCost()" class="space-y-4">
+          <input type="text" [(ngModel)]="editedCostName" name="editedCostName" placeholder="Nome do custo" class="w-full">
+          <input type="number" [(ngModel)]="editedCostValue" name="editedCostValue" placeholder="Valor mensal" class="w-full">
+          <div class="flex justify-end gap-4 pt-4">
+              <button type="button" (click)="closeEditModal()" class="font-bold py-2 px-6 rounded-xl transition duration-300 bg-[var(--card-color)] text-[var(--secondary-color)] border border-[var(--input-border-color)] hover:bg-[var(--card-bg-hover)]">
+                  Cancelar
+              </button>
+              <button type="submit" class="font-bold py-2 px-6 rounded-xl shadow-md transition duration-300 text-white bg-[var(--accent-color)] hover:opacity-80">
+                  Salvar
+              </button>
+          </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- Delete Confirmation Modal -->
+@if (costToDelete(); as cost) {
+  <div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 animate-fade-in" (click)="closeDeleteConfirm()">
+    <div class="bg-[var(--card-color)] rounded-2xl shadow-2xl p-8 w-full max-w-md text-center transform transition-transform duration-300 scale-100 animate-scale-in" (click)="$event.stopPropagation()">
+      <div class="text-5xl mb-4">🗑️</div>
+      <h3 class="text-xl font-bold text-[var(--text-color)] mb-2">Excluir Custo?</h3>
+      <p class="text-[var(--secondary-color)] mb-6">Tem certeza que deseja excluir <br/> <strong class="text-pink-600">"{{ cost.name }}"</strong>?</p>
+      <div class="flex justify-center gap-4">
+          <button (click)="closeDeleteConfirm()" class="font-bold py-2 px-8 rounded-xl transition duration-300 bg-[var(--card-color)] text-[var(--secondary-color)] border border-[var(--input-border-color)] hover:bg-[var(--card-bg-hover)]">
+              Cancelar
+          </button>
+          <button (click)="confirmDelete()" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-8 rounded-lg shadow-md transition duration-300">
+              Excluir
+          </button>
+      </div>
+    </div>
+  </div>
+}
+
+<style>
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-out forwards;
+  }
+  @keyframes scale-in {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .animate-scale-in {
+     animation: scale-in 0.3s ease-out forwards;
+  }
+</style>

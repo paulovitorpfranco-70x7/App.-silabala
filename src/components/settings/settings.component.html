@@ -1,0 +1,73 @@
+<div class="space-y-6">
+  <header>
+    <p class="text-lg text-[var(--secondary-color)]">Personalize sua experiência no SilabaLa+.</p>
+  </header>
+
+  <div class="p-6 rounded-2xl bg-[var(--card-color)] border border-[var(--input-border-color)] shadow-[0_2px_8px_var(--shadow-color)]">
+    <h3 class="text-xl font-bold text-[var(--text-color)] mb-4">Aparência do App</h3>
+    <div class="flex items-center justify-between p-4 rounded-lg bg-[var(--bg-color)]">
+      <span class="font-semibold text-lg text-[var(--text-color)]">
+        {{ currentTheme() === 'dark' ? 'Modo Noturno 🌙' : 'Modo Claro ☀️' }}
+      </span>
+      <div class="theme-toggle">
+        <label class="switch">
+          <input type="checkbox" [checked]="currentTheme() === 'dark'" (change)="toggleTheme()">
+          <span class="slider round"></span>
+        </label>
+      </div>
+    </div>
+     <p class="text-sm text-center mt-4 text-[var(--secondary-color)]">
+        O app também detecta o tema do seu celular automaticamente na primeira vez que você abre!
+     </p>
+  </div>
+</div>
+
+<style>
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 26px;
+  }
+
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: var(--secondary-color);
+    border-radius: 26px;
+    transition: 0.3s;
+  }
+
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: 0.3s;
+  }
+
+  input:checked + .slider {
+    background-color: var(--accent-color);
+  }
+
+  input:checked + .slider:before {
+    transform: translateX(24px);
+  }
+</style>

@@ -1,0 +1,7 @@
+{
+  "name": "SilabaLa+",
+  "description": "A cute and complete app for craftswomen to manage pricing, sales, and customers for their small businesses. It helps calculate the ideal selling price, control stock, manage orders, and view insightful reports.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

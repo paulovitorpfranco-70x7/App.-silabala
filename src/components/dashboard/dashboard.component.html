@@ -1,0 +1,179 @@
+<div class="space-y-6">
+  <header>
+    <h2 class="text-3xl font-bold text-[var(--text-color)]">Seu Cantinho Criativo 🎀</h2>
+    <p class="text-[var(--secondary-color)] mt-1">Bem-vinda de volta! Aqui está um resumo do seu negócio.</p>
+  </header>
+
+  <!-- KPIs -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+    <div class="p-5 rounded-2xl bg-[var(--card-color)] shadow-[0_4px_12px_var(--shadow-color)] border border-[var(--input-border-color)] flex items-center gap-4 transition-transform hover:scale-105">
+        <div class="w-12 h-12 rounded-full flex items-center justify-center bg-pink-100 text-pink-500 text-2xl">💰</div>
+        <div>
+            <h3 class="text-sm font-semibold text-[var(--secondary-color)]">Vendas do Mês</h3>
+            <p class="text-2xl font-bold text-[var(--text-color)]">{{ totalSalesMonth() | currency:'BRL' }}</p>
+        </div>
+    </div>
+    <div class="p-5 rounded-2xl bg-[var(--card-color)] shadow-[0_4px_12px_var(--shadow-color)] border border-[var(--input-border-color)] flex items-center gap-4 transition-transform hover:scale-105">
+        <div class="w-12 h-12 rounded-full flex items-center justify-center bg-purple-100 text-purple-500 text-2xl">📦</div>
+        <div>
+            <h3 class="text-sm font-semibold text-[var(--secondary-color)]">Pedidos Pendentes</h3>
+            <p class="text-2xl font-bold text-[var(--text-color)]">{{ pendingOrders() }}</p>
+        </div>
+    </div>
+    <div class="p-5 rounded-2xl bg-[var(--card-color)] shadow-[0_4px_12px_var(--shadow-color)] border border-[var(--input-border-color)] flex items-center gap-4 transition-transform hover:scale-105">
+        <div class="w-12 h-12 rounded-full flex items-center justify-center bg-green-100 text-green-500 text-2xl">💹</div>
+        <div>
+            <h3 class="text-sm font-semibold text-[var(--secondary-color)]">Lucro do Mês</h3>
+            <p class="text-2xl font-bold text-[var(--text-color)]">{{ estimatedProfitMonth() | currency:'BRL' }}</p>
+        </div>
+    </div>
+    <div class="p-5 rounded-2xl bg-[var(--card-color)] shadow-[0_4px_12px_var(--shadow-color)] border border-[var(--input-border-color)] flex items-center gap-4 transition-transform hover:scale-105">
+        <div class="w-12 h-12 rounded-full flex items-center justify-center bg-yellow-100 text-yellow-500 text-2xl">⚠️</div>
+        <div>
+            <h3 class="text-sm font-semibold text-[var(--secondary-color)]">Materiais Baixos</h3>
+            <p class="text-2xl font-bold text-[var(--text-color)]">{{ lowStockMaterials() }}</p>
+        </div>
+    </div>
+  </div>
+
+  <!-- Main Grid -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Left Column -->
+    <div class="lg:col-span-2 space-y-6">
+        <!-- Sales Chart -->
+        <div class="p-6 rounded-2xl bg-[var(--card-color)] shadow-[0_4px_12px_var(--shadow-color)] border border-[var(--input-border-color)]" (pointerdown)="closeTooltip()">
+            <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+                <h3 class="text-xl font-bold text-[var(--text-color)]">{{ chartTitle() }}</h3>
+                <div class="flex items-center rounded-lg bg-[var(--card-bg-hover)] p-1 text-sm">
+                    <button (click)="setChartPeriod('7d')"
+                            [class]="'px-3 py-1 rounded-md font-semibold transition-colors ' + (chartPeriod() === '7d' ? 'bg-[var(--card-color)] text-[var(--accent-color)] shadow-sm' : 'text-[var(--secondary-color)] hover:text-[var(--accent-color)]')">
+                        7 Dias
+                    </button>
+                    <button (click)="setChartPeriod('month')"
+                            [class]="'px-3 py-1 rounded-md font-semibold transition-colors ' + (chartPeriod() === 'month' ? 'bg-[var(--card-color)] text-[var(--accent-color)] shadow-sm' : 'text-[var(--secondary-color)] hover:text-[var(--accent-color)]')">
+                        Mês
+                    </button>
+                    <button (click)="setChartPeriod('year')"
+                            [class]="'px-3 py-1 rounded-md font-semibold transition-colors ' + (chartPeriod() === 'year' ? 'bg-[var(--card-color)] text-[var(--accent-color)] shadow-sm' : 'text-[var(--secondary-color)] hover:text-[var(--accent-color)]')">
+                        Ano
+                    </button>
+                </div>
+            </div>
+            
+            @if (hasSalesData()) {
+              <!-- Scrollable Container for the chart -->
+              <div class="overflow-x-auto pt-10 pb-3 -mx-4 px-4">
+                <!-- Chart content with min-width to force scroll -->
+                <div class="h-64 flex items-end gap-3" [style.min-width]="salesChartData().length * 2.5 + 'rem'">
+                  <!-- Each bar is a flex item that does NOT shrink and has a fixed width -->
+                  @for(bar of salesChartData(); track bar.day) {
+                    <div class="flex-none w-8 h-full flex flex-col justify-end items-center group relative cursor-pointer" 
+                         (pointerdown)="handleBarClick($event, bar.day)">
+                        <!-- Tooltip -->
+                        <div class="absolute bottom-full mb-2 w-max bg-pink-600 text-white text-xs font-bold rounded-md py-1 px-2.5 pointer-events-none opacity-0 transition-opacity z-10 shadow-lg"
+                             [class.opacity-100]="activeTooltip() === bar.day"
+                             [class.z-20]="activeTooltip() === bar.day">
+                            {{ bar.amount | currency:'BRL' }}
+                            <div class="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-t-4 border-t-pink-600 border-l-4 border-l-transparent border-r-4 border-r-transparent"></div>
+                        </div>
+
+                        <!-- Bar -->
+                        <div class="w-full bg-pink-400 group-hover:bg-pink-500 transition-all duration-300 rounded-t-lg" 
+                             [style.height]="bar.height"
+                             style="min-height: 2px;">
+                        </div>
+
+                        <!-- Label -->
+                        <span class="text-xs text-[var(--secondary-color)] mt-1.5 select-none">
+                          {{ bar.day }}
+                        </span>
+                    </div>
+                  }
+                </div>
+              </div>
+            } @else {
+              <div class="h-64 flex items-center justify-center text-center text-[var(--secondary-color)]">
+                  <div>
+                      <div class="text-4xl">📊</div>
+                      <p class="mt-2 font-semibold">Nenhum dado de venda para este período.</p>
+                      <p class="text-sm">Tente registrar um pedido pago!</p>
+                  </div>
+              </div>
+            }
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="p-6 rounded-2xl bg-[var(--card-color)] shadow-[0_4px_12px_var(--shadow-color)] border border-[var(--input-border-color)]">
+             <h3 class="text-xl font-bold text-[var(--text-color)] mb-4">Ações Rápidas</h3>
+             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 text-center">
+                <button (click)="onQuickAction('orders')" class="flex flex-col items-center p-4 rounded-xl bg-pink-50 hover:bg-pink-100 transition-colors group">
+                    <span class="text-4xl mb-2">🛍️</span>
+                    <span class="font-semibold text-pink-700 group-hover:text-pink-800">Novo Pedido</span>
+                </button>
+                <button (click)="onQuickAction('products')" class="flex flex-col items-center p-4 rounded-xl bg-purple-50 hover:bg-purple-100 transition-colors group">
+                    <span class="text-4xl mb-2">✨</span>
+                    <span class="font-semibold text-purple-700 group-hover:text-purple-800">Novo Produto</span>
+                </button>
+                <button (click)="onQuickAction('pricing')" class="flex flex-col items-center p-4 rounded-xl bg-yellow-50 hover:bg-yellow-100 transition-colors group">
+                    <span class="text-4xl mb-2">💲</span>
+                    <span class="font-semibold text-yellow-700 group-hover:text-yellow-800">Calcular Preço</span>
+                </button>
+                 <button (click)="onQuickAction('inventory')" class="flex flex-col items-center p-4 rounded-xl bg-green-50 hover:bg-green-100 transition-colors group">
+                    <span class="text-4xl mb-2">🗒️</span>
+                    <span class="font-semibold text-green-700 group-hover:text-green-800">Ver Estoque</span>
+                </button>
+                <button (click)="onQuickAction('reports')" class="flex flex-col items-center p-4 rounded-xl bg-blue-50 hover:bg-blue-100 transition-colors group">
+                    <span class="text-4xl mb-2">📊</span>
+                    <span class="font-semibold text-blue-700 group-hover:text-blue-800">Relatórios</span>
+                </button>
+             </div>
+        </div>
+    </div>
+    
+    <!-- Right Column -->
+    <div class="space-y-6">
+        <!-- Smart Suggestions -->
+        <div class="p-6 rounded-2xl bg-[var(--card-color)] shadow-[0_4px_12px_var(--shadow-color)] border border-[var(--input-border-color)]">
+            <h3 class="text-xl font-bold text-[var(--text-color)] mb-4">Sugestões Inteligentes 🧠</h3>
+            <div class="space-y-3">
+              @for(suggestion of suggestions(); track suggestion) {
+                <div class="bg-purple-50 p-3 rounded-lg flex items-start">
+                    <span class="text-xl mr-3">💡</span>
+                    <p class="text-sm text-purple-800" [innerHTML]="formatSuggestion(suggestion)"></p>
+                </div>
+              } @empty {
+                <p class="text-center text-[var(--secondary-color)] py-4">Tudo em ordem por aqui!</p>
+              }
+            </div>
+        </div>
+        
+        <!-- Delivery Timeline -->
+        <div class="p-6 rounded-2xl bg-[var(--card-color)] shadow-[0_4px_12px_var(--shadow-color)] border border-[var(--input-border-color)]">
+            <h3 class="text-xl font-bold text-[var(--text-color)] mb-4">Próximas Entregas 📅</h3>
+            <div class="space-y-3 max-h-60 overflow-y-auto pr-2">
+                @for(order of upcomingDeliveries(); track order.id) {
+                    <div class="flex items-center gap-3">
+                        <div class="text-center font-bold bg-pink-100 text-pink-700 rounded-lg p-2 w-14">
+                            <div class="text-xs">{{ order.deliveryDate | date:'MMM' }}</div>
+                            <div class="text-lg">{{ order.deliveryDate | date:'d' }}</div>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-[var(--text-color)]">{{ getCustomerName(order.customerId) }}</p>
+                            <p class="text-xs text-[var(--secondary-color)]">Pedido #{{order.id}}</p>
+                        </div>
+                    </div>
+                } @empty {
+                    <div class="text-center py-8 text-[var(--secondary-color)]">
+                        <p>Nenhuma entrega nos próximos 7 dias.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <!-- Bottom Quote -->
+  <div class="text-center p-6 rounded-2xl bg-gradient-to-r from-pink-100 to-purple-100 border border-white">
+      <p class="font-semibold text-lg text-pink-700 italic">"{{ quoteOfTheDay() }}"</p>
+  </div>
+</div>

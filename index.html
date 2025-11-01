@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SilabaLa+</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style type="text/tailwindcss">
+    body { font-family: 'Poppins', sans-serif; }
+    /* Simple form styling to match the cute theme */
+    input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="tel"], input[type="date"], select, textarea {
+      @apply w-full px-3 py-3 rounded-lg border placeholder-pink-300 focus:ring-2 focus:border-transparent transition-all duration-300;
+      color-scheme: light; /* Prevents browser-default dark styles on date inputs etc. */
+      background-color: var(--input-bg);
+      border-color: var(--input-border-color);
+      color: var(--text-color);
+    }
+    /* Specific override for search inputs with an icon, due to CSS specificity */
+    .relative input[type="text"] {
+        @apply pl-10;
+    }
+    input[type="text"]::placeholder, input[type="email"]::placeholder, input[type="password"]::placeholder, input[type="number"]::placeholder, input[type="tel"]::placeholder, textarea::placeholder {
+        color: var(--input-placeholder-color);
+    }
+    input:focus, select:focus, textarea:focus {
+        --tw-ring-color: var(--input-focus-ring-color);
+    }
+    
+    /* Custom scrollbar for the whole app */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--card-color);
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--secondary-color);
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent-color);
+    }
+  </style>
+  <style>
+    :root {
+      /* Light Theme (Cute padrão) */
+      --bg-color: #fff6fa;
+      --text-color: #3d3d3d;
+      --card-color: #ffffff;
+      --accent-color: #e94e77;
+      --secondary-color: #a18ca5;
+      --shadow-color: rgba(233, 78, 119, 0.1);
+      --input-bg: #ffffff;
+      --input-border-color: #fce7f3; /* pink-100 */
+      --input-placeholder-color: #f9a8d4; /* pink-300 */
+      --input-focus-ring-color: #f472b6; /* pink-400 */
+      --card-bg-hover: #fdf2f8; /* pink-50 for hovers */
+      --highlight-bg: #fdf2f8;
+      --highlight-text: #be185d;
+      --success-bg: #f0fdf4;
+      --success-text: #166534;
+      --warning-bg: #fefce8;
+      --warning-text: #b45309;
+      --info-bg: #eff6ff;
+      --info-text: #1e40af;
+      --danger-bg: #fef2f2;
+      --danger-text: #991b1b;
+    }
+
+    .dark-theme {
+      /* Dark Theme Cute */
+      --bg-color: #2b1b36;
+      --text-color: #fbe8f2;
+      --card-color: #3a2448;
+      --accent-color: #f2a1c2;
+      --secondary-color: #c6b5d8;
+      --shadow-color: rgba(0, 0, 0, 0.2);
+      --input-bg: #4c305f;
+      --input-border-color: #6d4b85;
+      --input-placeholder-color: #9e8aaf;
+      --input-focus-ring-color: #f2a1c2;
+      --card-bg-hover: #4c305f;
+      --highlight-bg: #582a4d;
+      --highlight-text: #fbcfe8;
+      --success-bg: #224b30;
+      --success-text: #a7f3d0;
+      --warning-bg: #5f481c;
+      --warning-text: #fde68a;
+      --info-bg: #294069;
+      --info-text: #bfdbfe;
+      --danger-bg: #632222;
+      --danger-text: #fecaca;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      transition: background-color 0.4s ease, color 0.4s ease;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script type="importmap">
+{
+  "imports": {
+    "rxjs": "https://aistudiocdn.com/rxjs@^7.8.2?conditions=es2015",
+    "rxjs/operators": "https://aistudiocdn.com/rxjs@^7.8.2/operators?conditions=es2015",
+    "rxjs/ajax": "https://aistudiocdn.com/rxjs@^7.8.2/ajax?conditions=es2015",
+    "rxjs/webSocket": "https://aistudiocdn.com/rxjs@^7.8.2/webSocket?conditions=es2015",
+    "rxjs/testing": "https://aistudiocdn.com/rxjs@^7.8.2/testing?conditions=es2015",
+    "rxjs/fetch": "https://aistudiocdn.com/rxjs@^7.8.2/fetch?conditions=es2015",
+    "@angular/forms": "https://next.esm.sh/@angular/forms@^20.3.7?external=rxjs",
+    "@angular/common": "https://next.esm.sh/@angular/common@^20.3.7?external=rxjs",
+    "@angular/common/http": "https://next.esm.sh/@angular/common@^20.3.7/http?external=rxjs",
+    "@angular/core": "https://next.esm.sh/@angular/core@^20.3.7?external=rxjs",
+    "@angular/platform-browser": "https://next.esm.sh/@angular/platform-browser@^20.3.7?external=rxjs",
+    "@angular/compiler": "https://next.esm.sh/@angular/compiler@^20.3.7?external=rxjs",
+    "firebase/app": "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js",
+    "firebase/auth": "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js",
+    "firebase/compat/auth": "https://next.esm.sh/firebase@^12.5.0/compat/auth?external=rxjs",
+    "firebase/compat/app": "https://next.esm.sh/firebase@^12.5.0/compat/app?external=rxjs"
+  }
+}
+</script>
+</head>
+<body>
+  <app-root></app-root>
+</body>
+</html>

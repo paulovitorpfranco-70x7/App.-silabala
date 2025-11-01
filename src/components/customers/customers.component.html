@@ -1,0 +1,41 @@
+<div class="space-y-8">
+  <header>
+    <h2 class="text-3xl font-bold text-[var(--text-color)]">Clientes</h2>
+    <p class="text-[var(--secondary-color)] mt-1">Sua lista de clientes especiais.</p>
+  </header>
+  
+  <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+    <div class="lg:col-span-3 p-6 rounded-2xl transition-all bg-[var(--card-color)] border border-[var(--input-border-color)] shadow-[0_2px_5px_var(--shadow-color)]">
+       <h3 class="text-xl font-bold text-[var(--text-color)] mb-4">Clientes Cadastrados</h3>
+       <div class="space-y-3 max-h-96 overflow-y-auto pr-2">
+          @for (customer of customers(); track customer.id) {
+            <div class="bg-[var(--card-bg-hover)] p-4 rounded-lg flex justify-between items-center">
+              <div>
+                <p class="font-semibold text-[var(--text-color)]">{{ customer.name }}</p>
+                <p class="text-sm text-[var(--secondary-color)]">{{ customer.phone }}</p>
+              </div>
+              <div class="flex space-x-2">
+                 @for(tag of customer.tags; track tag) {
+                   <span [class]="'px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ' + getTagClass(tag)">{{ tag }}</span>
+                 }
+              </div>
+            </div>
+          } @empty {
+            <div class="text-center py-12 text-[var(--secondary-color)]">
+              <div class="text-4xl">👩‍💼</div>
+              <p class="mt-2">Nenhum cliente cadastrado.</p>
+            </div>
+          }
+       </div>
+    </div>
+    <div class="lg:col-span-2 p-6 rounded-2xl transition-all bg-[var(--card-color)] border border-[var(--input-border-color)] shadow-[0_2px_5px_var(--shadow-color)]">
+      <h3 class="text-xl font-bold text-[var(--text-color)] mb-4">Adicionar Novo Cliente</h3>
+      <form (ngSubmit)="addCustomer()" class="space-y-4">
+        <input type="text" [(ngModel)]="newCustomerName" name="customerName" placeholder="Nome completo" class="w-full">
+        <input type="tel" [(ngModel)]="newCustomerPhone" name="customerPhone" placeholder="Telefone (WhatsApp)" class="w-full">
+        <input type="text" [(ngModel)]="newCustomerTags" name="customerTags" placeholder="Tags (ex: fiel, novo)" class="w-full">
+        <button type="submit" class="w-full text-white p-3 font-semibold transition-colors shadow-md rounded-xl bg-[var(--accent-color)] hover:opacity-80">Adicionar Cliente</button>
+      </form>
+    </div>
+  </div>
+</div>
